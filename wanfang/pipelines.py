@@ -31,8 +31,10 @@ class WanfangPipeline(object):
         try:
             self.cursor.execute(insertSql,insertData)
             self.mysql_client.commit()
+            print('数据插入成功',dict(item)['title'])
         except Exception as err:
             print(err)
+            print('数据插入失败',dict(item)['title'])
             self.mysql_client.rollback()
         return item
 

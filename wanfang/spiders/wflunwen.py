@@ -267,9 +267,10 @@ class WflunwenSpider(RedisSpider):
         # englishTitle(英文标题)
         item['englishTitle'] = response.xpath('//div[@class="English"]/text()').extract_first('暂无').replace('\t', '')
         # content(摘要)
-        item['content'] = response.xpath('//input[@class="share_summary"]/@value').extract_first('').replace('\t',
+        item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t',
                                                                                                              '').replace(
             ' ', '').replace('\r\n', '')
+        # item['content'] = ''.join(response.xpath('//div[@class="abstract"]/textarea/@text()').extract()).replace('\t','').replace(' ','').replace('\r\n', '')
 
         lis = response.xpath('//ul[@class="info"]//li')
         print(len(lis))
@@ -323,9 +324,7 @@ class WflunwenSpider(RedisSpider):
         item['title'] = ''.join(response.xpath('//div[@class="title"]/text()').extract()).replace('\r\n', '').replace(
             '\t', '').replace('目录', '').replace(' ', '')
         # content(摘要)
-        item['content'] = response.xpath('//input[@class="share_summary"]/@value').extract_first('').replace('\t',
-                                                                                                             '').replace(
-            ' ', '').replace('\r\n', '').replace('\u3000', '')
+        item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t','').replace(' ', '').replace('\r\n', '').replace('\u3000', '')
 
         lis = response.xpath('//ul[@class="info"]//li')
         print(len(lis))
