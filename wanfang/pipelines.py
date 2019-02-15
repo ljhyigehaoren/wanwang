@@ -38,10 +38,6 @@ class WanfangPipeline(object):
             self.mysql_client.rollback()
         return item
 
-        # data = json.dumps(dict(item),ensure_ascii=False)+'\n'
-        # with open('tech.json','a+') as filehandler:
-        #     filehandler.write(data)
-        # return item
 
     def close_spider(self,spider0):
         self.mysql_client.close()

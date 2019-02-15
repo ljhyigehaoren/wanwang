@@ -27,7 +27,6 @@ class WflunwenSpider(RedisSpider):
     # ]
     redis_key = 'wflunwen:start_urls'
 
-
     def parse(self, response):
         # 获取当前请求搜索的关键字
         pattern = re.compile('.*?searchWord=(.*?)&', re.S)
@@ -80,8 +79,8 @@ class WflunwenSpider(RedisSpider):
             yield scrapy.Request(url=response.url,callback=self.parse_pagelist_data,dont_filter=True)
 
     def parse_navigation_data(self,response):
+
         print('导航栏数据获取成功', response.meta['searchType'], response.meta['searchKeyWord'])
-        # print('导航栏数据获取成功',response.meta['searchType'],response.meta['searchKeyWord'],response.text)
         data = json.loads(response.text)
         base_url = response.meta['baseUrl']
         for sub_dict in data['facetTree']:
@@ -219,39 +218,45 @@ class WflunwenSpider(RedisSpider):
         # title(中文标题)
         item['title'] = ''.join(response.xpath('//div[@class="title"]/text()').extract()).replace('\r\n', '').replace(
             '\t', '').replace('目录', '').replace(' ', '')
-        # keywords(关键词)
-        item['keywords'] = ';'.join(response.xpath('//ul[@class="info"]/li[1]//a/text()').extract())
-        # authors(作者)
-        item['authors'] = response.xpath('//ul[@class="info"]/li[2]//a[1]/text()').extract_first('')
-        # 学位授权单位
-        item['degreeUnit'] = response.xpath('//ul[@class="info"]/li[3]//a[1]/text()').extract_first('')
-        # 授予学位
-        item['awardedTheDegree'] = response.xpath(
-            '//ul[@class="info"]/li[4]/div[@class="info_right author"]/text()').extract_first('')
-        # 学科专业
-        item['professional'] = response.xpath('//ul[@class="info"]/li[5]//a[1]/text()').extract_first('')
-        # 导师姓名
-        item['mentorName'] = response.xpath('//ul[@class="info"]/li[6]//a[1]/text()').extract_first('')
-        # 学位年度
-        item['degreeInAnnual'] = response.xpath('//ul[@class="info"]/li[7]/div[2]/text()').extract_first('')
-        # 语种
-        item['languages'] = response.xpath('//ul[@class="info"]/li[8]/div[2]/text()').extract_first('').replace('\r\n',
-                                                                                                                '').replace(
-            '\t', '')
-        if response.xpath('//ul[@class="info"]/li[9]/div[@class="info_left"]/text()').extract_first('') == "分类号：":
-            # 分类号
-            item['classNumber'] = ''.join(response.xpath('//ul[@class="info"]/li[9]/div[2]/text()').extract()).replace(
-                '\r\n', '').replace('\t', '')
-            # 在线出版日期
-            item['publishTime'] = response.xpath('//ul[@class="info"]/li[10]/div[2]/text()').extract_first('').replace(
-                '\r\n', '').replace('\t', '').replace(' ', '')
-        elif response.xpath('//ul[@class="info"]/li[9]/div[@class="info_left"]/text()').extract_first('') == "在线出版日期：":
-            # 分类号
-            item['classNumber'] = ''
-            # 在线出版日期
-            item['publishTime'] = response.xpath('//ul[@class="info"]/li[9]/div[2]/text()').extract_first('').replace(
-                '\r\n', '').replace('\t', '').replace(' ', '')
-        # print(item)
+
+        # content(摘要)
+        item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t',
+                                                                                                              '').replace(
+            ' ', '').replace('\r\n', '')
+
+        lis = response.xpath('//ul[@class="info"]//li')
+        print(len(lis))
+        for li in lis:
+            if li.xpath('./div[@class="info_left"]/text()').extract_first('') == "关键词：":
+                # keywords(关键词)
+                item['keywords'] = '、'.join(li.xpath('.//a/text()').extract())
+            elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "作者：":
+                # authors(作者)
+                item['authors'] = li.xpath('.//a[1]/text()').extract_first('')
+            elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "学位授予单位：":
+                # 学位授权单位
+                item['degreeUnit'] = li.xpath('.//a[1]/text()').extract_first('')
+            elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "授予学位：":
+                # 授予学位
+                item['awardedTheDegree'] = li.xpath('./div[@class="info_right author"]/text()').extract_first('')
+            elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "学科专业：":
+                # 学科专业
+                item['professional'] = li.xpath('.//a[1]/text()').extract_first('')
+            elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "导师姓名：":
+                # 导师姓名
+                item['mentorName'] = li.xpath('.//a[1]/text()').extract_first('')
+            elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "学位年度：":
+                # 学位年度
+                item['degreeInAnnual'] = li.xpath('./div[2]/text()').extract_first('')
+            elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "语种：":
+                # 语种
+                item['languages'] = li.xpath('./div[2]/text()').extract_first('').replace('\r\n','').replace('\t', '')
+            elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "分类号：":
+                # 分类号
+                item['classNumber'] = ' '.join(li.xpath('./div[2]//text()').extract()).replace('\r\n',' ').replace('\t', '').strip(' ')
+            elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "在线出版日期：":
+                # 在线出版日期
+                item['publishTime'] = li.xpath('./div[2]/text()').extract_first('').replace('\r\n', '').replace('\t', '').replace(' ', '')
 
         item['searchKey'] = info['searchKeyWord']
         item['searchType'] = info['searchType']
@@ -270,7 +275,6 @@ class WflunwenSpider(RedisSpider):
         item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t',
                                                                                                              '').replace(
             ' ', '').replace('\r\n', '')
-        # item['content'] = ''.join(response.xpath('//div[@class="abstract"]/textarea/@text()').extract()).replace('\t','').replace(' ','').replace('\r\n', '')
 
         lis = response.xpath('//ul[@class="info"]//li')
         print(len(lis))
@@ -278,7 +282,7 @@ class WflunwenSpider(RedisSpider):
             # print(li.xpath('./div[@class="info_left"]/text()').extract_first(''))
             if li.xpath('./div[@class="info_left"]/text()').extract_first('') == "doi：":
                 item['doi'] = li.xpath('.//a/text()').extract_first('').replace('\t', '').replace(' ', '')
-            elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "关键词：":
+            elif li.xpath('./div[@class="info_left "]/text()').extract_first('') == "关键词：":
                 # keywords(关键词)
                 item['keywords'] = '、'.join(li.xpath('.//a/text()').extract())
             elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "Keyword：":

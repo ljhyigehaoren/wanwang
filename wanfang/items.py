@@ -15,6 +15,8 @@ class WanfangDegreeItem(scrapy.Item):
     url = scrapy.Field()
     # title(中文标题)
     title = scrapy.Field()
+    # content(摘要)
+    content = scrapy.Field()
     # keywords(关键词)
     keywords = scrapy.Field()
     # authors(作者)
