@@ -174,6 +174,19 @@ offset: 0
 limit: 6
 hqfwfacetField: 
 navSearchType: 
+
+
+searchType: conference
+searchWord: (%E6%B3%95%E5%BE%8B)
+facetField: $unit_name02
+isHit: 
+startYear: 
+endYear: 
+limit: 6
+hqfwfacetField: 
+navSearchType: 
+single: true
+bindFieldLimit: {}
 """
 
 """
@@ -190,4 +203,7 @@ navSearchType:
 
 &facetField=$tutor_name:%E8%83%A1%E9%B8%BF%E9%AB%98&facetName=%E8%83%A1%E9%B8%BF%E9%AB%98:$tutor_name
 &facetField=$tutor_name:胡鸿高&facetName=胡鸿高:$tutor_name
+
+
+
 """

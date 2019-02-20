@@ -61,71 +61,196 @@ class WflunwenSpider(RedisSpider):
                 'startYear':'',
                 'endYear':'',
                 'offset': '0',
-                'limit': '20',
+                'limit': '10',
                 'hqfwfacetField':'',
                 'navSearchType':'',
             }
 
             yield scrapy.FormRequest(url='http://g.wanfangdata.com.cn/search/navigation.do',formdata=form_data,
-                                     callback=self.parse_navigation_data,meta={'baseUrl':response.url,'searchType':form_data['searchType'],'searchKeyWord':searchKeyWord},
+                                     callback=self.parse_navigation_data,meta={'baseUrl':response.url,'searchType':form_data['searchType'],'searchKeyWord':searchKeyWord,'total':'YES'},
                                      dont_filter=True
                                      )
-
             yield scrapy.Request(url=response.url, callback=self.parse_pagelist_data, dont_filter=True)
 
-        else:
+            headers={
+                # 'Referer': 'http://www.wanfangdata.com.cn/search/searchList.do?searchType=conference&showType=&pageSize=&searchWord=%E6%B3%95%E5%BE%8B&isTriggerTag=',
+                'Referer': 'http://www.wanfangdata.com.cn/search/searchList.do?searchType=%s&showType=&pageSize=&searchWord=%s&isTriggerTag=' % (searchType,parse.quote(searchKeyWord)),
+                # "Referer": "http://www.wanfangdata.com.cn/search/searchList.do?searchType=conference&showType=&pageSize=&searchWord=%E6%B3%95%E5%BE%8B&isTriggerTag=",
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36',
+            }
 
+            if searchType == 'conference':
+                """
+                #$common_year 会议 年份（法、政治）
+                #$subject_classcode_level 会议 学科分类
+                #$conf_type 会议 会议级别
+                #$language 会议 语种
+                #$source_db 会议 数据来源
+                #$conf_name02 会议 会议名称
+                ##$authors_name 会议 作者
+                #$unit_name02 会议 机构
+                #$hostunit_name02 会议 会议主办单位
+                """
+                category_data = [
+                    '$common_year','$subject_classcode_level','$conf_type',
+                    '$language','$source_db','$conf_name02','$authors_name',
+                    '$unit_name02','hostunit_name02'
+                ]
+
+                for category_name in category_data:
+                    form_data = self.get_category_request_formdata(searchType, searchKeyWord, category_name, '11')
+                    print(form_data)
+                    yield scrapy.FormRequest(url='http://www.wanfangdata.com.cn/search/navigation.do', formdata=form_data,
+                                             callback=self.parse_navigation_data,headers=headers,
+                                             meta={'baseUrl': response.url, 'searchType': form_data['searchType'],
+                                                   'searchKeyWord': searchKeyWord,'total':'NO','limit':'11','lastcount':'0'},
+                                             dont_filter=True
+                                             )
+            elif searchType == 'perio':
+                """
+                # $common_year 期刊 年份
+                # $subject_classcode_level 期刊 学科分类
+                # $core_perio 期刊 （核心）
+                # $language 期刊 语种
+                # $source_db 期刊 （来源数据库）
+                # $perio_title02 期刊 （刊名）
+                # $first_publish 期刊 （出版状态）
+                # $unit_name02 期刊 （机构）
+                # $authors_name 期刊 （作者）
+                """
+                category_data = [
+                    '$common_year','$subject_classcode_level','$core_perio',
+                    '$language','$source_db','$perio_title02','$first_publish',
+                    '$unit_name02','$authors_name',
+                ]
+
+                for category_name in category_data:
+                    form_data = self.get_category_request_formdata(searchType, searchKeyWord, category_name, '11')
+                    yield scrapy.FormRequest(url='http://www.wanfangdata.com.cn/search/navigation.do',
+                                             formdata=form_data,
+                                             callback=self.parse_navigation_data, headers=headers,
+                                             meta={'baseUrl': response.url, 'searchType': form_data['searchType'],
+                                                   'searchKeyWord': searchKeyWord, 'total': 'NO', 'limit': '11',
+                                                   'lastcount': '0'},
+                                             dont_filter=True
+                                             )
+            elif searchType == 'degree':
+                """
+                # $common_year 学位 年份
+                # $subject_classcode_level 学位 学科分类
+                # $degree_level 学位 授予学位
+                # $language 学位 语种
+                # $tutor_name 学位 导师
+                # $unit_name02 学位（授予单位）
+                """
+
+                category_data = [
+                    '$common_year','$subject_classcode_level','$degree_level',
+                    '$language','$tutor_name','$unit_name02'
+                ]
+
+                for category_name in category_data:
+                    form_data = self.get_category_request_formdata(searchType,searchKeyWord,category_name,'11')
+                    yield scrapy.FormRequest(url='http://www.wanfangdata.com.cn/search/navigation.do',
+                                             formdata=form_data,
+                                             callback=self.parse_navigation_data, headers=headers,
+                                             meta={'baseUrl': response.url, 'searchType': form_data['searchType'],
+                                                   'searchKeyWord': searchKeyWord, 'total': 'NO', 'limit': '11',
+                                                   'lastcount': '0'},
+                                             dont_filter=True
+                                             )
+        else:
             print(searchKeyWord, searchType, '数据量', totalRow, '小于5000')
             yield scrapy.Request(url=response.url,callback=self.parse_pagelist_data,dont_filter=True)
 
+    def get_category_request_formdata(self,searchType,searchKeyWord,category_name,limit):
+
+        form_data = {
+            'searchType': searchType,
+            'searchWord': '(' + parse.quote(searchKeyWord) + ')',
+            'facetField': category_name,
+            'isHit': '',
+            'startYear': '',
+            'endYear': '',
+            'limit': limit,
+            'hqfwfacetField': '',
+            'navSearchType': '',
+            'single': 'true',
+            'bindFieldLimit': '{}',
+        }
+
+        return form_data
+
+
     def parse_navigation_data(self,response):
+        if '万方数据知识服务平台' in response.text:
+            print('没有获取到分类数据')
+        else:
+            print('111111------------------------------')
 
-        print('导航栏数据获取成功', response.meta['searchType'], response.meta['searchKeyWord'])
-        data = json.loads(response.text)
-        base_url = response.meta['baseUrl']
-        for sub_dict in data['facetTree']:
-            if sub_dict['pId'] != '-1':
-                print(sub_dict)
-                if sub_dict['facetField'] == '$common_year':
-                    # &facetField=$common_year:2018&facetName=2018:$common_year
-                    full_url = base_url + '&facetField=%s&facetName=%s' % (sub_dict['facetField']+':'+sub_dict['value'],sub_dict['value']+':'+sub_dict['facetField'])
-                    # print(full_url)
-                    yield scrapy.Request(url=full_url, callback=self.parse_pagelist_data)
+            data = json.loads(response.text)
+            base_url = response.meta['baseUrl']
+            searchType = response.meta['searchType']
+            searchKeyWord = response.meta['searchKeyWord']
+            total = response.meta['total']
+            if total == "NO":
+                lastcount = int(response.meta['lastcount'])
+            else:
+                lastcount = 0
 
-                elif sub_dict['facetField'] == '$subject_classcode_level':
-                    # &facetField=$subject_classcode_level:%E2%88%B7/D&facetName=%E6%94%BF%E6%B2%BB%E3%80%81%E6%B3%95%E5%BE%8B:$subject_classcode_level
-                    # &facetField=$subject_classcode_level:∷/D&facetName=政治、法律:$subject_classcode_level
-                    full_url = base_url + '&facetField=%s&facetName=%s' % (sub_dict['facetField']+':'+'%E2%88%B7'+'/'+sub_dict['value'],parse.quote(sub_dict['showName'])+':'+sub_dict['facetField'])
-                    # print(full_url)
-                    yield scrapy.Request(url=full_url, callback=self.parse_pagelist_data)
+            print('导航栏数据获取成功',searchType,searchKeyWord)
+            for sub_dict in data['facetTree'][lastcount:]:
+                if sub_dict['pId'] != '-1':
+                    # print(sub_dict)
+                    if sub_dict['facetField'] == '$subject_classcode_level': #学科分类
+                        # &facetField=$subject_classcode_level:%E2%88%B7/D&facetName=%E6%94%BF%E6%B2%BB%E3%80%81%E6%B3%95%E5%BE%8B:$subject_classcode_level
+                        # &facetField=$subject_classcode_level:∷/D&facetName=政治、法律:$subject_classcode_level
+                        full_url = base_url + '&facetField=%s&facetName=%s' % (sub_dict['facetField']+':'+'%E2%88%B7'+'/'+sub_dict['value'],parse.quote(sub_dict['showName'])+':'+sub_dict['facetField'])
+                        print(full_url)
+                        yield scrapy.Request(url=full_url, callback=self.parse_pagelist_data)
 
-                elif sub_dict['facetField'] == '$degree_level':
-                    """
-                    &facetField=$degree_level:%E7%A1%95%E5%A3%AB&facetName=%E7%A1%95%E5%A3%AB:$degree_level
-                    &facetField=$degree_level:硕士&facetName=硕士:$degree_level
-                    """
-                    full_url = base_url + '&facetField=%s&facetName=%s' % (sub_dict['facetField']+':'+parse.quote(sub_dict['value']),parse.quote(sub_dict['value'])+':'+sub_dict['facetField'])
-                    # print(full_url)
-                    yield scrapy.Request(url=full_url, callback=self.parse_pagelist_data)
+                    elif sub_dict['facetField'] == '$language': #语种
+                        """
+                        &facetField=$language:chi&facetName=%E4%B8%AD%E6%96%87:$language
+                        &facetField=$language:chi&facetName=中文:$language
+                        """
+                        full_url = base_url + '&facetField=%s&facetName=%s' % (sub_dict['facetField']+':'+sub_dict['value'],parse.quote(sub_dict['showName'])+':'+sub_dict['facetField'])
+                        print(full_url)
+                        yield scrapy.Request(url=full_url, callback=self.parse_pagelist_data)
 
-                elif sub_dict['facetField'] == '$language':
-                    """
-                    &facetField=$language:chi&facetName=%E4%B8%AD%E6%96%87:$language
-                    &facetField=$language:chi&facetName=中文:$language
-                    """
-                    full_url = base_url + '&facetField=%s&facetName=%s' % (sub_dict['facetField']+':'+sub_dict['value'],parse.quote(sub_dict['showName'])+':'+sub_dict['facetField'])
-                    # print(full_url)
-                    yield scrapy.Request(url=full_url, callback=self.parse_pagelist_data)
+                    else:
+                        #其他的都是一样的格式
+                        """
+                        &facetField=$tutor_name:%E8%83%A1%E9%B8%BF%E9%AB%98&facetName=%E8%83%A1%E9%B8%BF%E9%AB%98:$tutor_name
+                        &facetField=$tutor_name:胡鸿高&facetName=胡鸿高:$tutor_name
+                        """
+                        full_url = base_url + '&facetField=%s&facetName=%s' % (sub_dict['facetField']+':'+parse.quote(sub_dict['value']),parse.quote(sub_dict['showName'])+':'+sub_dict['facetField'])
+                        print(full_url)
+                        yield scrapy.Request(url=full_url, callback=self.parse_pagelist_data)
 
-                elif sub_dict['facetField'] == '$tutor_name':
-                    """
-                    &facetField=$tutor_name:%E8%83%A1%E9%B8%BF%E9%AB%98&facetName=%E8%83%A1%E9%B8%BF%E9%AB%98:$tutor_name
-                    &facetField=$tutor_name:胡鸿高&facetName=胡鸿高:$tutor_name
-                    """
-                    full_url = base_url + '&facetField=%s&facetName=%s' % (sub_dict['facetField']+':'+parse.quote(sub_dict['showName']),parse.quote(sub_dict['showName'])+':'+sub_dict['facetField'])
-                    # print(full_url)
-                    yield scrapy.Request(url=full_url, callback=self.parse_pagelist_data)
 
+            if total == 'NO':
+                limit = int(response.meta['limit'])
+                print(limit,lastcount+1,len(data['facetTree']))
+                #如果没有获取完毕分类数据，继续获取
+                if len(data['facetTree']) == lastcount+1:
+                    print('分类加载完毕')
+                else:
+                    pass
+                    # 还没有获取完毕，继续获取
+                    form_data = self.get_category_request_formdata(searchType, searchKeyWord,
+                                                                   sub_dict['facetField'], str(limit + 5))
+                    lastcount = str(len(data['facetTree']) - 1)
+                    yield scrapy.FormRequest(url='http://www.wanfangdata.com.cn/search/navigation.do',
+                                             formdata=form_data,
+                                             callback=self.parse_navigation_data,
+                                             meta={'baseUrl': base_url,
+                                                   'searchType': form_data['searchType'],
+                                                   'searchKeyWord': searchKeyWord, 'total': 'NO',
+                                                   'limit': str(limit + 5),
+                                                   'lastcount': lastcount},
+                                             dont_filter=True
+                                             )
 
     def parse_pagelist_data(self,response):
 
@@ -297,10 +422,22 @@ class WflunwenSpider(RedisSpider):
                 item['journalName'] = li.xpath('.//a[@class="college"]/text()').extract_first('')
             elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "Journal：":
                 item['journal'] = li.xpath('.//a[1]/text()').extract_first('')
+                if len(item['journal']) == 0:
+                    item['journal'] = li.xpath('.//div[2]/text()').extract_first('').replace('\r\n', '').replace(' ',
+                                                                                                                 '').replace(
+                    '\t', '')
             elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "年，卷(期)：":
                 item['yearsInfo'] = li.xpath('.//a/text()').extract_first('')
+                if len(item['yearsInfo']) == 0:
+                    item['yearsInfo'] = li.xpath('.//div[2]/text()').extract_first('').replace('\r\n', '').replace(' ',
+                                                                                                                 '').replace(
+                    '\t', '')
             elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "所属期刊栏目：":
                 item['journalSection'] = li.xpath('.//a/text()').extract_first('')
+                if len(item['journalSection']) == 0:
+                    item['journalSection'] = li.xpath('.//div[2]/text()').extract_first('').replace('\r\n', '').replace(' ',
+                                                                                                                 '').replace(
+                    '\t', '')
             elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "分类号：":
                 item['classNumber'] = li.xpath('.//div[2]/text()').extract_first('').replace('\r', '').replace('\n',
                                                                                                                '').replace(
@@ -312,9 +449,9 @@ class WflunwenSpider(RedisSpider):
                                                                                                                  '').replace(
                     '\t', '')
             elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "页数：":
-                item['pages'] = li.xpath('.//div[2]/text()').extract_first('')
+                item['pages'] = li.xpath('.//div[2]/text()').extract_first('').replace(' ','')
             elif li.xpath('./div[@class="info_left"]/text()').extract_first('') == "页码：":
-                item['pageNumber'] = li.xpath('.//div[2]/text()').extract_first('')
+                item['pageNumber'] = li.xpath('.//div[2]/text()').extract_first('').replace(' ','')
 
         item['searchKey'] = info['searchKeyWord']
         item['searchType'] = info['searchType']
