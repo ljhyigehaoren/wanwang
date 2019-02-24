@@ -236,7 +236,6 @@ class WflunwenSpider(RedisSpider):
                 if len(data['facetTree']) == lastcount+1:
                     print('分类加载完毕')
                 else:
-                    pass
                     # 还没有获取完毕，继续获取
                     form_data = self.get_category_request_formdata(searchType, searchKeyWord,
                                                                    sub_dict['facetField'], str(limit + 5))
@@ -345,9 +344,10 @@ class WflunwenSpider(RedisSpider):
             '\t', '').replace('目录', '').replace(' ', '')
 
         # content(摘要)
-        item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t',
-                                                                                                              '').replace(
-            ' ', '').replace('\r\n', '')
+        # item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t',
+        #                                                                                                       '').replace(
+        #     ' ', '').replace('\r\n', '')
+        item['content'] = ''.join(response.xpath('//div[@class="abstract"]/textarea/text()').extract())
 
         lis = response.xpath('//ul[@class="info"]//li')
         print(len(lis))
@@ -397,9 +397,10 @@ class WflunwenSpider(RedisSpider):
         # englishTitle(英文标题)
         item['englishTitle'] = response.xpath('//div[@class="English"]/text()').extract_first('暂无').replace('\t', '')
         # content(摘要)
-        item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t',
-                                                                                                             '').replace(
-            ' ', '').replace('\r\n', '')
+        # item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t',
+        #                                                                                                      '').replace(
+        #     ' ', '').replace('\r\n', '')
+        item['content'] = ''.join(response.xpath('//div[@class="abstract"]/textarea/text()').extract())
 
         lis = response.xpath('//ul[@class="info"]//li')
         print(len(lis))
@@ -465,7 +466,8 @@ class WflunwenSpider(RedisSpider):
         item['title'] = ''.join(response.xpath('//div[@class="title"]/text()').extract()).replace('\r\n', '').replace(
             '\t', '').replace('目录', '').replace(' ', '')
         # content(摘要)
-        item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t','').replace(' ', '').replace('\r\n', '').replace('\u3000', '')
+        # item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t','').replace(' ', '').replace('\r\n', '').replace('\u3000', '')
+        item['content'] = ''.join(response.xpath('//div[@class="abstract"]/textarea/text()').extract())
 
         lis = response.xpath('//ul[@class="info"]//li')
         print(len(lis))
@@ -526,9 +528,10 @@ class WflunwenSpider(RedisSpider):
         # englishTitle(英文标题)
         item['englishTitle'] = response.xpath('//div[@class="English"]/text()').extract_first('暂无').replace('\t', '')
         # content(摘要)
-        item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t',
-                                                                                                              '').replace(
-            ' ', '').replace('\r\n', '')
+        # item['content'] = ''.join(response.xpath('//input[@class="share_summary"]/@value').extract()).replace('\t',
+        #                                                                                                       '').replace(
+        #     ' ', '').replace('\r\n', '')
+        item['content'] = ''.join(response.xpath('//div[@class="abstract"]/textarea/text()').extract())
 
         lis = response.xpath('//ul[@class="info"]//li')
         print(len(lis))
