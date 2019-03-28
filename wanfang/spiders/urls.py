@@ -204,6 +204,47 @@ bindFieldLimit: {}
 &facetField=$tutor_name:%E8%83%A1%E9%B8%BF%E9%AB%98&facetName=%E8%83%A1%E9%B8%BF%E9%AB%98:$tutor_name
 &facetField=$tutor_name:胡鸿高&facetName=胡鸿高:$tutor_name
 
-
-
 """
+
+# 新版代码url地址分析
+# 主题思路，旧版本网站没有对获取的条数进行限制，
+# 第一步根据每个分类的关键字获取列表数据
+# 从列表中获取标题，在新版网站中搜索，第一条即为压迫获取的论文结果
+# 弊端，访问量可能会过大。
+
+# 旧版各分类url地址规律
+#期刊+法律
+#http://s.wanfangdata.com.cn/Paper.aspx?q=%e6%b3%95%e5%be%8b+DBID%3aWF_QK&f=top&p=2
+# q: 法律 DBID:WF_QK
+# f: top
+# p: 2
+
+#期刊+政治
+#http://s.wanfangdata.com.cn/Paper.aspx?q=%E6%94%BF%E6%B2%BB%20DBID%3AWF_QK&f=top
+# q: 政治 DBID:WF_QK
+# f: top
+#p: 2
+
+#学位+法律
+#http://s.wanfangdata.com.cn/Paper.aspx?q=%E6%B3%95%E5%BE%8B%20DBID%3AWF_XW&f=top
+# q: 法律 DBID:WF_XW
+# f: top
+# p: 2
+
+#学位+政治
+#http://s.wanfangdata.com.cn/Paper.aspx?q=%e6%94%bf%e6%b2%bb+DBID%3aWF_XW&f=top&p=2
+# q: 政治 DBID:WF_XW
+# f: top
+# p: 2
+
+#会议+政治
+#http://s.wanfangdata.com.cn/Paper.aspx?q=%e6%94%bf%e6%b2%bb+DBID%3aWF_HY&f=top&p=2
+# q: 政治 DBID:WF_HY
+# f: top
+# p: 2
+
+#会议+法律
+#http://s.wanfangdata.com.cn/Paper.aspx?q=%E6%B3%95%E5%BE%8B%20DBID%3AWF_HY&f=top
+# q: 法律 DBID:WF_HY
+# f: top
+# p: 2
