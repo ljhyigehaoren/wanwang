@@ -3,9 +3,13 @@
 #==============以下为修改后的版本思路================
 # 新版代码url地址分析
 # 主题思路，旧版本网站没有对获取的条数进行限制，
-# 第一步根据每个分类的关键字获取列表数据
-# 从列表中获取标题，在新版网站中搜索，第一条即为压迫获取的论文结果
-# 弊端，访问量可能会过大。
+# 第一步根据每个分类的关键字获取搜索结果列表数据
+# 从列表中获取旧版本的详情url地址，提取详情的id，新旧版网站的论文详情id是一样的，根据id拼接出新版网站的论文详情url地址
+# 下面以期刊下的某一篇论文信息为例举例对比说明
+# 旧版本的详情url地址
+# http://d.old.wanfangdata.com.cn/Periodical/hbshkx201703005
+# 新版本的详情URL地址
+# http://www.wanfangdata.com.cn/details/detail.do?_type=perio&id=hbshkx201703005
 
 import scrapy
 from scrapy_redis.spiders import RedisSpider
